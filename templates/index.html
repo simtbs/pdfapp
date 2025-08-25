@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compilazione PDF Sequenziale</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background-color: #e6ecf5;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+header {
+    text-align: center;
+    padding: 25px 0;
+    font-size: 30px;
+    font-weight: 600;
+    color: #000000; /* testo nero */
+    background: linear-gradient(135deg, #009246, #ffffff, #ce2b37);
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+    letter-spacing: 1px;
+}
+
+/* Animazione sfumatura */
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+header {
+    background-size: 200% 200%;
+    animation: gradientShift 8s ease infinite;
+}
+form {
+    width: 90%;
+    max-width: 700px;
+    margin: 0 auto;
+    flex: 1;
+    padding: 20px 0;
+}
+.card {
+    background-color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    padding: 25px;
+    margin: 20px 0;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.6s ease;
+}
+.card.active { opacity: 1; max-height: 2000px; }
+.card-section {
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+.card-section:nth-child(odd){ background-color:#f0f4ff; }
+.card-section:nth-child(even){ background-color:#f9f9f9; }
+.card .card-section:first-child { margin-top: 0 !important; }
+
+h3 { color: #0056b3; margin-top:0; margin-bottom:10px; }
+label { display:block; font-weight:bold; margin-top:10px; }
+input {
+    width: 100%; padding:10px; margin-top:5px;
+    border-radius:8px; border:1px solid #ccc;
+    box-sizing:border-box; transition:all 0.3s;
+}
+input:focus { border-color:#007BFF; box-shadow:0 0 8px rgba(0,123,255,0.3); outline:none; }
+button {
+    padding:12px 20px; border:none; border-radius:8px;
+    cursor:pointer; font-weight:bold; font-size:16px; margin-top:10px;
+}
+.next { background-color:#007BFF; color:white; margin-right:10px; }
+.prev { background-color:#6c757d; color:white; margin-right:10px; }
+.submit { background-color:#28a745; color:white; width:100%; }
+#aggiungiProdotto { background-color:#28a745; color:white; width:100%; text-align:center; padding:10px; border:none; border-radius:8px; margin-top:10px; }
+.checkmark { display:inline-block; margin-left:10px; color:green; font-weight:bold; opacity:0; transform:scale(0.5); transition:all 0.4s ease; }
+.checkmark.visible { opacity:1; transform:scale(1); }
+
+footer {
+    text-align: center;
+    padding: 10px 0;
+    color: #555;
+    font-size: 14px;
+    background-color: #f0f0f0;
+}
+</style>
+</head>
+<body>
+
+<header>
+    ITG FTTH REPORT
+</header>
+
+<form action="/genera" method="post">
+
+<!-- PAGE 1 -->
+<div class="card active">
+  <div class="card-section">
+    <h3>Impianto <span class="checkmark" id="checkImpianto">✅</span></h3>
+    <label for="WR_IMPIANTO">WR IMPIANTO:</label>
+    <input type="text" name="WR_IMPIANTO" id="WR_IMPIANTO">
+    <label for="TGU">TGU:</label>
+    <input type="text" name="TGU" id="TGU">
+  </div>
+
+  <div class="card-section">
+    <h3>Località <span class="checkmark" id="checkLocalita">✅</span></h3>
+    <label for="INDIRIZZO_CLIENTE">INDIRIZZO CLIENTE:</label>
+    <input type="text" name="INDIRIZZO_CLIENTE" id="INDIRIZZO_CLIENTE">
+    <label for="COMUNE_INTERVENTO">COMUNE INTERVENTO:</label>
+    <input type="text" name="COMUNE_INTERVENTO" id="COMUNE_INTERVENTO">
+  </div>
+
+  <div class="card-section">
+    <h3>Attività <span class="checkmark" id="checkAttivita">✅</span></h3>
+    <label for="ATTIVITA_ESEGUITA">ATTIVITA ESEGUITA:</label>
+    <input type="text" name="ATTIVITA_ESEGUITA" id="ATTIVITA_ESEGUITA">
+  </div>
+
+  <div style="margin-top:20px;">
+    <button type="button" class="next">Avanti</button>
+  </div>
+</div>
+
+<!-- PAGE 2 -->
+<div class="card">
+  <div class="card-section">
+    <h3>Prodotto 1 <span class="checkmark" id="checkProdotto1">✅</span></h3>
+    <label for="PRODOTTO_1">PRODOTTO 1:</label>
+    <input type="text" name="PRODOTTO_1" id="PRODOTTO_1">
+    <label for="NMU_PRODOTTO_1">NMU PRODOTTO 1:</label>
+    <input type="text" name="NMU_PRODOTTO_1" id="NMU_PRODOTTO_1">
+  </div>
+
+  <div class="card-section" id="prodotto2">
+    <h3>Prodotto 2 <span class="checkmark" id="checkProdotto2">✅</span></h3>
+    <label for="PRODOTTO_2">PRODOTTO 2:</label>
+    <input type="text" name="PRODOTTO_2" id="PRODOTTO_2">
+    <label for="NMU_PRODOTTO_2">NMU PRODOTTO 2:</label>
+    <input type="text" name="NMU_PRODOTTO_2" id="NMU_PRODOTTO_2">
+  </div>
+
+  <div class="card-section" id="prodotto3">
+    <h3>Prodotto 3 <span class="checkmark" id="checkProdotto3">✅</span></h3>
+    <label for="PRODOTTO_3">PRODOTTO 3:</label>
+    <input type="text" name="PRODOTTO_3" id="PRODOTTO_3">
+    <label for="NMU_PRODOTTO_3">NMU PRODOTTO 3:</label>
+    <input type="text" name="NMU_PRODOTTO_3" id="NMU_PRODOTTO_3">
+  </div>
+
+  <button type="button" id="aggiungiProdotto">+ Aggiungi prodotto</button>
+
+  <div style="margin-top:20px;">
+    <button type="button" class="prev">Indietro</button>
+    <button type="button" class="next">Avanti</button>
+  </div>
+</div>
+
+<!-- PAGE 3 -->
+<div class="card">
+  <div class="card-section">
+    <h3>Dettagli Rete <span class="checkmark" id="checkRete">✅</span></h3>
+    <label for="PERCORSO_DI_RETE">PERCORSO DI RETE:</label>
+    <input type="text" name="PERCORSO_DI_RETE" id="PERCORSO_DI_RETE">
+    <label for="BORCHIA_OTTICA">BORCHIA OTTICA:</label>
+    <input type="text" name="BORCHIA_OTTICA" id="BORCHIA_OTTICA">
+  </div>
+
+  <div class="card-section">
+    <h3>Collaudo <span class="checkmark" id="checkCollaudo">✅</span></h3>
+    <label for="CODICE_COLLAUDO">CODICE COLLAUDO:</label>
+    <input type="text" name="CODICE_COLLAUDO" id="CODICE_COLLAUDO">
+  </div>
+
+  <div style="margin-top:20px;">
+    <button type="button" class="prev">Indietro</button>
+    <button type="submit" class="submit">Genera PDF</button>
+  </div>
+</div>
+
+</form>
+
+<footer>
+    www.simt.it
+</footer>
+
+<script>
+// Navigazione pagine
+const cards = document.querySelectorAll('.card');
+let current = 0;
+function showCard(index){
+    cards.forEach((c,i)=> c.classList.remove('active'));
+    cards[index].classList.add('active');
+}
+document.querySelectorAll('.next').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+        if(current<cards.length-1){ current++; showCard(current);}
+    });
+});
+document.querySelectorAll('.prev').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+        if(current>0){ current--; showCard(current);}
+    });
+});
+
+// Prodotti opzionali
+const prodotti = ['prodotto2','prodotto3'];
+let currentProd = 0;
+document.getElementById('aggiungiProdotto').addEventListener('click', ()=>{
+    if(currentProd<prodotti.length){
+        document.getElementById(prodotti[currentProd]).style.display='block';
+        currentProd++;
+        if(currentProd>=prodotti.length) document.getElementById('aggiungiProdotto').style.display='none';
+    }
+});
+document.getElementById('prodotto2').style.display='none';
+document.getElementById('prodotto3').style.display='none';
+
+// Checkmark animati
+function checkSection(sectionId, fields){
+    const check = document.getElementById(sectionId);
+    const filled = fields.every(id=>document.getElementById(id).value.trim()!=='');
+    if(filled) check.classList.add('visible');
+    else check.classList.remove('visible');
+}
+const allFields = [
+    {section:'checkImpianto',fields:['WR_IMPIANTO','TGU']},
+    {section:'checkLocalita',fields:['INDIRIZZO_CLIENTE','COMUNE_INTERVENTO']},
+    {section:'checkAttivita',fields:['ATTIVITA_ESEGUITA']},
+    {section:'checkProdotto1',fields:['PRODOTTO_1','NMU_PRODOTTO_1']},
+    {section:'checkProdotto2',fields:['PRODOTTO_2','NMU_PRODOTTO_2']},
+    {section:'checkProdotto3',fields:['PRODOTTO_3','NMU_PRODOTTO_3']},
+    {section:'checkRete',fields:['PERCORSO_DI_RETE','BORCHIA_OTTICA']},
+    {section:'checkCollaudo',fields:['CODICE_COLLAUDO']}
+];
+allFields.forEach(g=>{
+    g.fields.forEach(id=>{
+        document.getElementById(id).addEventListener('input',()=> checkSection(g.section,g.fields));
+    });
+});
+</script>
+</body>
+</html>
