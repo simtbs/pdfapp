@@ -80,33 +80,29 @@ def genera_pdf():
     # ----------------------
     # Invio email con SendGrid API
     # ----------------------
+    import os
+import sendgrid
+from sendgrid.helpers.mail import Mail
+
+SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
+
+@app.route('/genera', methods=['POST'])
+def genera_pdf():
+    ...
     try:
-        sg = SendGridAPIClient(os.environ.get("SENDGRID_API_KEY"))
-
-        with open(file_abs_path, "rb") as f:
-            file_data = f.read()
-        encoded_file = base64.b64encode(file_data).decode()
-
+        sg = sendgrid.SendGridAPIClient(SENDGRID_API_KEY)
         message = Mail(
-            from_email=os.environ.get("MAIL_DEFAULT_SENDER", "s.perniciaro@simt.it"),
+            from_email="s.perniciaro@simt.it",   # deve essere verificata su SendGrid
             to_emails="s.perniciaro@simt.it",
             subject="Report FTTH",
-            plain_text_content="REPORT DELIVERY FTTH"
+            html_content="<p>REPORT DELIVERY FTTH</p>"
         )
-
-        attachedFile = Attachment(
-            FileContent(encoded_file),
-            FileName(filename),
-            FileType("application/pdf"),
-            Disposition("attachment")
-        )
-        message.attachment = attachedFile
-
+        with open(file_abs_path, "rb") as f:
+            message.add_attachment(f.read(), "application/pdf", filename, "attachment")
         sg.send(message)
-
     except Exception as e:
         return f"Errore durante l'invio dell'email: {e}", 500
-
+        
     return render_template("success.html", file_url=file_url_abs, filename=filename)
 
 
