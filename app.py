@@ -4,10 +4,10 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import mm
 from io import BytesIO
 from datetime import datetime
-from unidecode import unidecode
 import os
-from sendgrid import SendGridAPIClient
+import sendgrid
 from sendgrid.helpers.mail import Mail, Attachment, FileContent, FileName, FileType, Disposition
+from unidecode import unidecode
 import base64
 
 app = Flask(__name__)
@@ -32,7 +32,6 @@ COORDS = {
     'DATA_INTERVENTO': (86*mm, 33*mm),
     'CODICE_COLLAUDO': (13*mm, 10*mm)
 }
-
 
 @app.route('/')
 def index():
@@ -78,31 +77,34 @@ def genera_pdf():
     file_url_abs = url_for('static', filename=filename, _external=True)
 
     # ----------------------
-    # Invio email con SendGrid API
+    # Invio email con SendGrid
     # ----------------------
-    import os
-import sendgrid
-from sendgrid.helpers.mail import Mail
-
-SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
-
-@app.route('/genera', methods=['POST'])
-def genera_pdf():
-    ...
     try:
-        sg = sendgrid.SendGridAPIClient(SENDGRID_API_KEY)
+        sg = sendgrid.SendGridAPIClient(api_key=os.environ.get("SENDGRID_API_KEY"))
         message = Mail(
-            from_email="s.perniciaro@simt.it",   # deve essere verificata su SendGrid
+            from_email="s.perniciaro@simt.it",  # deve essere verificata su SendGrid
             to_emails="s.perniciaro@simt.it",
             subject="Report FTTH",
             html_content="<p>REPORT DELIVERY FTTH</p>"
         )
+
+        # Allegato PDF
         with open(file_abs_path, "rb") as f:
-            message.add_attachment(f.read(), "application/pdf", filename, "attachment")
+            data = f.read()
+            encoded_file = base64.b64encode(data).decode()
+            attachedFile = Attachment(
+                FileContent(encoded_file),
+                FileName(filename),
+                FileType("application/pdf"),
+                Disposition("attachment")
+            )
+            message.attachment = attachedFile
+
         sg.send(message)
+
     except Exception as e:
         return f"Errore durante l'invio dell'email: {e}", 500
-        
+
     return render_template("success.html", file_url=file_url_abs, filename=filename)
 
 
