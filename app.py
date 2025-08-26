@@ -4,27 +4,16 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import mm
 from io import BytesIO
 from datetime import datetime
-from flask_mail import Mail, Message
-import os
 from unidecode import unidecode
+import os
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail, Attachment, FileContent, FileName, FileType, Disposition
+import base64
 
 app = Flask(__name__)
 
 # ----------------------
-# Configurazione Flask-Mail
-# ----------------------
-app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.sendgrid.net')
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USE_TLS'] = False
-app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_USERNAME'] = 'apikey'
-app.config['MAIL_PASSWORD'] = os.environ.get('SENDGRID_API_KEY')
-app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
-
-mail = Mail(app)
-
-# ----------------------
-# Coordinate dei campi PDF
+# Coordinate dei campi
 # ----------------------
 COORDS = {
     'TGU': (27*mm, 260*mm),
@@ -44,9 +33,7 @@ COORDS = {
     'CODICE_COLLAUDO': (13*mm, 10*mm)
 }
 
-# ----------------------
-# Rotte
-# ----------------------
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -81,7 +68,7 @@ def genera_pdf():
     page.merge_page(new_pdf.pages[0])
     output.add_page(page)
 
-    # Nome PDF dinamico, safe per caratteri speciali
+    # Nome PDF dinamico
     wr_safe = unidecode(dati.get('WR_IMPIANTO', 'modulo')).replace(" ", "_")
     filename = f"{wr_safe}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
     file_abs_path = os.path.join("static", filename)
@@ -90,24 +77,38 @@ def genera_pdf():
 
     file_url_abs = url_for('static', filename=filename, _external=True)
 
-    # Invia email con allegato
+    # ----------------------
+    # Invio email con SendGrid API
+    # ----------------------
     try:
-        msg = Message(
-            subject="Report FTTH",
-            sender=app.config['MAIL_DEFAULT_SENDER'],   # Mittente verificato SendGrid
-            recipients=["s.perniciaro@simt.it"]        # Destinatario
-        )
-        msg.body = "REPORT DELIVERY FTTH"
+        sg = SendGridAPIClient(os.environ.get("SENDGRID_API_KEY"))
+
         with open(file_abs_path, "rb") as f:
-            msg.attach(filename, "application/pdf", f.read())
-        mail.send(msg)
+            file_data = f.read()
+        encoded_file = base64.b64encode(file_data).decode()
+
+        message = Mail(
+            from_email=os.environ.get("MAIL_DEFAULT_SENDER", "s.perniciaro@simt.it"),
+            to_emails="s.perniciaro@simt.it",
+            subject="Report FTTH",
+            plain_text_content="REPORT DELIVERY FTTH"
+        )
+
+        attachedFile = Attachment(
+            FileContent(encoded_file),
+            FileName(filename),
+            FileType("application/pdf"),
+            Disposition("attachment")
+        )
+        message.attachment = attachedFile
+
+        sg.send(message)
+
     except Exception as e:
         return f"Errore durante l'invio dell'email: {e}", 500
 
-    # Pagina finale elegante
     return render_template("success.html", file_url=file_url_abs, filename=filename)
 
 
-# ----------------------
 if __name__ == "__main__":
     app.run(debug=True)
