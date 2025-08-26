@@ -13,8 +13,8 @@ app = Flask(__name__)
 # ----------------------
 # Configurazione Flask-Mail
 # ----------------------
-app.config['MAIL_SERVER'] = 'smtp.sendgrid.net'
-app.config['MAIL_PORT'] = 587
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.sendgrid.net')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 app.config['MAIL_USERNAME'] = 'apikey'
@@ -94,10 +94,10 @@ def genera_pdf():
     try:
         msg = Message(
             subject="Report FTTH",
-            sender=app.config['MAIL_DEFAULT_SENDER'],
-            recipients=[os.environ.get('MAIL_RECIPIENT', 's.perniciaro@simt.it')]
+            sender=app.config['MAIL_DEFAULT_SENDER'],   # Mittente verificato SendGrid
+            recipients=["s.perniciaro@simt.it"]        # Destinatario
         )
-        msg.body = "REPORT DELIVERY FTTH".encode('utf-8')  # Forza UTF-8
+        msg.body = "REPORT DELIVERY FTTH".encode('utf-8')  # Codifica UTF-8
         with open(file_abs_path, "rb") as f:
             msg.attach(filename, "application/pdf", f.read())
         mail.send(msg)
@@ -105,6 +105,7 @@ def genera_pdf():
         return f"Errore durante l'invio dell'email: {e}", 500
 
     return render_template("success.html", file_url=file_url_abs, filename=filename)
+
 
 
 # ----------------------
