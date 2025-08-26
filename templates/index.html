@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Compilazione PDF Sequenziale</title>
+<title>FTTH ITG</title>
 <style>
 body {
     font-family: Arial, sans-serif;
@@ -14,28 +14,23 @@ body {
     flex-direction: column;
     min-height: 100vh;
 }
-header {
-    text-align: center;
-    padding: 25px 0;
-    font-size: 30px;
-    font-weight: 600;
-    color: #000000; /* testo nero */
-    background: linear-gradient(135deg, #009246, #ffffff, #ce2b37);
-    border-radius: 0 0 20px 20px;
+
+/* Logo centrato */
+.logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 0;
+    background-color: #ffffff;
     box-shadow: 0 6px 15px rgba(0,0,0,0.15);
-    letter-spacing: 1px;
 }
 
-/* Animazione sfumatura */
-@keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+.logo-container img {
+    max-width: 100%;
+    height: auto;
+    max-height: 50px;
 }
-header {
-    background-size: 200% 200%;
-    animation: gradientShift 8s ease infinite;
-}
+
 form {
     width: 90%;
     max-width: 700px;
@@ -43,23 +38,26 @@ form {
     flex: 1;
     padding: 20px 0;
 }
+
 .card {
     background-color: #fff;
     border-radius: 16px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.1);
     padding: 25px;
     margin: 20px 0;
-    opacity: 0;
-    max-height: 0;
-    overflow: hidden;
-    transition: all 0.6s ease;
+    display: none; /* nasconde tutte le card di default */
 }
-.card.active { opacity: 1; max-height: 2000px; }
+
+.card.active { 
+    display: block; /* mostra solo la card attiva */
+}
+
 .card-section {
     padding: 15px;
     border-radius: 12px;
     margin-bottom: 15px;
 }
+
 .card-section:nth-child(odd){ background-color:#f0f4ff; }
 .card-section:nth-child(even){ background-color:#f9f9f9; }
 .card .card-section:first-child { margin-top: 0 !important; }
@@ -94,9 +92,10 @@ footer {
 </head>
 <body>
 
-<header>
-    ITG FTTH REPORT
-</header>
+<!-- Logo centrato -->
+<div class="logo-container">
+    <img src="https://www.simt.it/web/image/website/2/logo/SIMT%20-%20Impianti%20e%20Manutenzioni%20Elettroniche?unique=d1c64cc" alt="SIMT - Impianti e Manutenzioni Elettroniche">
+</div>
 
 <form action="/genera" method="post">
 
@@ -195,18 +194,27 @@ footer {
 // Navigazione pagine
 const cards = document.querySelectorAll('.card');
 let current = 0;
+
 function showCard(index){
-    cards.forEach((c,i)=> c.classList.remove('active'));
+    cards.forEach(c => c.classList.remove('active'));
     cards[index].classList.add('active');
 }
-document.querySelectorAll('.next').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-        if(current<cards.length-1){ current++; showCard(current);}
+
+document.querySelectorAll('.next').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if(current < cards.length - 1) { 
+            current++; 
+            showCard(current);
+        }
     });
 });
-document.querySelectorAll('.prev').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-        if(current>0){ current--; showCard(current);}
+
+document.querySelectorAll('.prev').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if(current > 0) { 
+            current--; 
+            showCard(current);
+        }
     });
 });
 
@@ -214,10 +222,10 @@ document.querySelectorAll('.prev').forEach(btn=>{
 const prodotti = ['prodotto2','prodotto3'];
 let currentProd = 0;
 document.getElementById('aggiungiProdotto').addEventListener('click', ()=>{
-    if(currentProd<prodotti.length){
+    if(currentProd < prodotti.length){
         document.getElementById(prodotti[currentProd]).style.display='block';
         currentProd++;
-        if(currentProd>=prodotti.length) document.getElementById('aggiungiProdotto').style.display='none';
+        if(currentProd >= prodotti.length) document.getElementById('aggiungiProdotto').style.display='none';
     }
 });
 document.getElementById('prodotto2').style.display='none';
@@ -230,6 +238,7 @@ function checkSection(sectionId, fields){
     if(filled) check.classList.add('visible');
     else check.classList.remove('visible');
 }
+
 const allFields = [
     {section:'checkImpianto',fields:['WR_IMPIANTO','TGU']},
     {section:'checkLocalita',fields:['INDIRIZZO_CLIENTE','COMUNE_INTERVENTO']},
@@ -240,6 +249,7 @@ const allFields = [
     {section:'checkRete',fields:['PERCORSO_DI_RETE','BORCHIA_OTTICA']},
     {section:'checkCollaudo',fields:['CODICE_COLLAUDO']}
 ];
+
 allFields.forEach(g=>{
     g.fields.forEach(id=>{
         document.getElementById(id).addEventListener('input',()=> checkSection(g.section,g.fields));
@@ -248,4 +258,3 @@ allFields.forEach(g=>{
 </script>
 </body>
 </html>
-
