@@ -18,13 +18,13 @@ app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 app.config['MAIL_USERNAME'] = 'apikey'
-app.config['MAIL_PASSWORD'] = os.environ.get('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')
-app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 's.perniciaro@simt.it')
+app.config['MAIL_PASSWORD'] = os.environ.get('SENDGRID_API_KEY')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
 
 mail = Mail(app)
 
 # ----------------------
-# Coordinate dei campi
+# Coordinate dei campi PDF
 # ----------------------
 COORDS = {
     'TGU': (27*mm, 260*mm),
@@ -97,15 +97,15 @@ def genera_pdf():
             sender=app.config['MAIL_DEFAULT_SENDER'],   # Mittente verificato SendGrid
             recipients=["s.perniciaro@simt.it"]        # Destinatario
         )
-        msg.body = "REPORT DELIVERY FTTH".encode('utf-8')  # Codifica UTF-8
+        msg.body = "REPORT DELIVERY FTTH"
         with open(file_abs_path, "rb") as f:
             msg.attach(filename, "application/pdf", f.read())
         mail.send(msg)
     except Exception as e:
         return f"Errore durante l'invio dell'email: {e}", 500
 
+    # Pagina finale elegante
     return render_template("success.html", file_url=file_url_abs, filename=filename)
-
 
 
 # ----------------------
