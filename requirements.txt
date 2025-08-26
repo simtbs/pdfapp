@@ -1,9 +1,4 @@
-<<<<<<< HEAD
-PyPDF2==3.0.1
-reportlab==4.0.0
-gunicorn==21.2.0
-=======
+Flask==2.3.3
 Flask-Mail==0.9.1
 PyPDF2==3.0.1
 reportlab==4.0.0
->>>>>>> 1ca7a76 (First commit)
