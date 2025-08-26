@@ -6,7 +6,6 @@ from io import BytesIO
 from datetime import datetime
 from flask_mail import Mail, Message
 import os
-import re  # <-- aggiunto per pulire il nome file
 
 app = Flask(__name__)
 
@@ -18,12 +17,14 @@ app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
 app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'True') == 'True'
 app.config['MAIL_USE_SSL'] = os.environ.get('MAIL_USE_SSL', 'False') == 'True'
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', 'apikey')
-app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '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)
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '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ì')
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'sp.perniciaro@gmail.com')
 
 mail = Mail(app)
 
+# ----------------------
 # Coordinate dei campi
+# ----------------------
 COORDS = {
     'TGU': (27*mm, 260*mm),
     'INDIRIZZO_CLIENTE': (48*mm, 243*mm),
@@ -42,13 +43,17 @@ COORDS = {
     'CODICE_COLLAUDO': (13*mm, 10*mm)
 }
 
+# ----------------------
+# Rotte
+# ----------------------
 @app.route('/')
 def index():
     return render_template('index.html')
 
+
 @app.route('/genera', methods=['POST'])
 def genera_pdf():
-    # Recupero modello
+    # Percorso modello PDF
     modello_path = os.path.join(os.getcwd(), "modello.pdf")
     if not os.path.exists(modello_path):
         return "Errore: 'modello.pdf' non trovato nella root del progetto.", 500
@@ -59,7 +64,7 @@ def genera_pdf():
     dati = {campo: request.form.get(campo, '') for campo in COORDS.keys()}
     dati['DATA_INTERVENTO'] = datetime.today().strftime("%d/%m/%Y")
 
-    # Layer testo
+    # Layer testo PDF
     packet = BytesIO()
     can = canvas.Canvas(packet, pagesize=(210*mm, 297*mm))
     can.setFont("Helvetica", 12)
@@ -68,7 +73,7 @@ def genera_pdf():
     can.save()
     packet.seek(0)
 
-    # Merge PDF
+    # Merge PDF con modello
     existing_pdf = PdfReader(modello_path)
     new_pdf = PdfReader(packet)
     output = PdfWriter()
@@ -76,31 +81,34 @@ def genera_pdf():
     page.merge_page(new_pdf.pages[0])
     output.add_page(page)
 
-    # Nome file dinamico dal campo WR_IMPIANTO
-    wr_valore = dati.get('WR_IMPIANTO', 'modulo')
-    wr_valore_sicuro = re.sub(r'[^a-zA-Z0-9_-]', '_', wr_valore)
-    filename = f"{wr_valore_sicuro}.pdf"
-
-    # Salvataggio PDF
+    # Salvataggio PDF con nome dinamico dal WR
+    wr_safe = dati.get('WR_IMPIANTO', 'modulo').replace(" ", "_")
+    filename = f"{wr_safe}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
     file_abs_path = os.path.join("static", filename)
     with open(file_abs_path, "wb") as f:
         output.write(f)
 
-    # URL di download
+    # URL per download
     file_url_abs = url_for('static', filename=filename, _external=True)
 
     # Invia email con allegato
     try:
-        msg = Message("Report FTTH", recipients=["s.perniciaro@simt.it"])  # 🔴 cambia destinatario
-        msg.body = "REPORT DELIVERYY FTTH"
+        msg = Message(
+            subject="Report FTTH",
+            sender=app.config['MAIL_DEFAULT_SENDER'],
+            recipients=[os.environ.get('MAIL_RECIPIENT', 's.perniciaro@simt.it')]
+        )
+        msg.body = "REPORT DELIVERY FTTH"
         with open(file_abs_path, "rb") as f:
             msg.attach(filename, "application/pdf", f.read())
         mail.send(msg)
     except Exception as e:
         return f"Errore durante l'invio dell'email: {e}", 500
 
-    # Pagina di successo
+    # Pagina finale
     return render_template("success.html", file_url=file_url_abs, filename=filename)
 
+
+# ----------------------
 if __name__ == "__main__":
     app.run(debug=True)
