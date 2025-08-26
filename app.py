@@ -10,13 +10,14 @@ import re  # <-- aggiunto per pulire il nome file
 
 app = Flask(__name__)
 
+
 app.config['MAIL_SERVER'] = 'smtp.sendgrid.net'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'apikey'         # sempre 'apikey' per SendGrid
-app.config['MAIL_PASSWORD'] = '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' # la chiave generata
-app.config['MAIL_DEFAULT_SENDER'] = 'sp.perniciaro@gmail.com'
-
+app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_USERNAME'] = os.environ.get('apikey')  # 'apikey'
+app.config['MAIL_PASSWORD'] = os.environ.get('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')  # la tua API Key
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('sp.perniciaro@gmail.com')
 mail = Mail(app)
 
 # Coordinate dei campi
