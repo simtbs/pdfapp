@@ -1,13 +1,25 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, url_for
 from PyPDF2 import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import mm
 from io import BytesIO
 from datetime import datetime
+from flask_mail import Mail, Message
+import os
+import re  # <-- aggiunto per pulire il nome file
 
 app = Flask(__name__)
 
-# Coordinate dei campi in mm (da regolare con griglia/Acrobat)
+app.config['MAIL_SERVER'] = 'smtp.sendgrid.net'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'apikey'         # sempre 'apikey' per SendGrid
+app.config['MAIL_PASSWORD'] = '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' # la chiave generata
+app.config['MAIL_DEFAULT_SENDER'] = 'sp.perniciaro@gmail.com'
+
+mail = Mail(app)
+
+# Coordinate dei campi
 COORDS = {
     'TGU': (27*mm, 260*mm),
     'INDIRIZZO_CLIENTE': (48*mm, 243*mm),
@@ -32,41 +44,59 @@ def index():
 
 @app.route('/genera', methods=['POST'])
 def genera_pdf():
-    # Prendi i valori dal form
+    # Recupero modello
+    modello_path = os.path.join(os.getcwd(), "modello.pdf")
+    if not os.path.exists(modello_path):
+        return "Errore: 'modello.pdf' non trovato nella root del progetto.", 500
+
+    os.makedirs("static", exist_ok=True)
+
+    # Dati dal form
     dati = {campo: request.form.get(campo, '') for campo in COORDS.keys()}
+    dati['DATA_INTERVENTO'] = datetime.today().strftime("%d/%m/%Y")
 
-    # Imposta DATA_INTERVENTO = data odierna
-    oggi = datetime.today().strftime("%d/%m/%Y")
-    dati['DATA_INTERVENTO'] = oggi
-
-    # PDF temporaneo con testo
+    # Layer testo
     packet = BytesIO()
-    can = canvas.Canvas(packet, pagesize=(210*mm, 297*mm))  # A4
+    can = canvas.Canvas(packet, pagesize=(210*mm, 297*mm))
     can.setFont("Helvetica", 12)
-
-    # Scrivi testo nei punti indicati
     for campo, (x, y) in COORDS.items():
-        can.drawString(x, y, dati[campo])
-
+        can.drawString(x, y, dati.get(campo, ''))
     can.save()
     packet.seek(0)
 
-    # Carica modello PDF
-    existing_pdf = PdfReader("modello.pdf")
+    # Merge PDF
+    existing_pdf = PdfReader(modello_path)
     new_pdf = PdfReader(packet)
     output = PdfWriter()
-
-    # Sovrapponi la pagina
     page = existing_pdf.pages[0]
     page.merge_page(new_pdf.pages[0])
     output.add_page(page)
 
-    # Salva PDF in memoria
-    output_stream = BytesIO()
-    output.write(output_stream)
-    output_stream.seek(0)
+    # Nome file dinamico dal campo WR_IMPIANTO
+    wr_valore = dati.get('WR_IMPIANTO', 'modulo')
+    wr_valore_sicuro = re.sub(r'[^a-zA-Z0-9_-]', '_', wr_valore)
+    filename = f"{wr_valore_sicuro}.pdf"
 
-    return send_file(output_stream, download_name="modulo_compilato.pdf", as_attachment=True)
+    # Salvataggio PDF
+    file_abs_path = os.path.join("static", filename)
+    with open(file_abs_path, "wb") as f:
+        output.write(f)
+
+    # URL di download
+    file_url_abs = url_for('static', filename=filename, _external=True)
+
+    # Invia email con allegato
+    try:
+        msg = Message("Report FTTH", recipients=["s.perniciaro@simt.it"])  # 🔴 cambia destinatario
+        msg.body = "REPORT DELIVERYY FTTH"
+        with open(file_abs_path, "rb") as f:
+            msg.attach(filename, "application/pdf", f.read())
+        mail.send(msg)
+    except Exception as e:
+        return f"Errore durante l'invio dell'email: {e}", 500
+
+    # Pagina di successo
+    return render_template("success.html", file_url=file_url_abs, filename=filename)
 
 if __name__ == "__main__":
     app.run(debug=True)
