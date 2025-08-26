@@ -3,95 +3,117 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FTTH Report - PDF pronto</title>
+<title>FTTH ITG - Registrato</title>
 <style>
-    body {
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        background-color: #f4f4f4;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-    }
+body {
+    font-family: Arial, sans-serif;
+    background-color: #e6ecf5;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
 
+/* Logo centrato */
+.logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 0 10px 0;
+}
+
+.logo-container img {
+    max-width: 100%;
+    height: auto;
+    max-height: 50px;
+}
+
+/* Box centrale simile alle card */
+.container {
+    background-color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    padding: 30px 25px;
+    max-width: 480px;
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+h1 {
+    font-size: 24px;
+    color: #0056b3;
+    margin-bottom: 15px;
+}
+
+p {
+    font-size: 16px;
+    color: #000000;
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.button-group a button {
+    font-size: 16px;
+    padding: 12px 25px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: 0.3s;
+    color: #ffffff;
+}
+
+.download-btn {
+    background-color: #28a745; /* verde simile pagina form */
+}
+
+.download-btn:hover {
+    background-color: #1e7e34;
+}
+
+.back-btn {
+    background-color: #007BFF; /* blu simile pagina form */
+}
+
+.back-btn:hover {
+    background-color: #0056b3;
+}
+
+@media (max-width: 500px) {
     .container {
-        background-color: #ffffff;
-        border-radius: 12px;
-        padding: 40px 30px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        max-width: 480px;
-        text-align: center;
-        border-top: 8px solid #008000; /* verde */
+        padding: 25px 20px;
     }
-
-    h1 {
-        font-size: 24px;
-        color: #008000; /* verde */
-        margin-bottom: 20px;
+    .button-group a button {
+        width: 100%;
     }
-
-    p {
-        font-size: 16px;
-        color: #333333;
-        margin-bottom: 30px;
-        line-height: 1.5;
-    }
-
-    .button-group {
-        display: flex;
-        justify-content: center;
-        gap: 15px;
-        flex-wrap: wrap;
-    }
-
-    button {
-        font-size: 16px;
-        padding: 12px 25px;
-        border-radius: 8px;
-        border: none;
-        cursor: pointer;
-        transition: 0.3s;
-        color: #ffffff;
-    }
-
-    .download-btn {
-        background-color: #008000; /* verde */
-    }
-
-    .download-btn:hover {
-        background-color: #005500;
-    }
-
-    .back-btn {
-        background-color: #ff0000; /* rosso */
-    }
-
-    .back-btn:hover {
-        background-color: #aa0000;
-    }
-
-    @media (max-width: 500px) {
-        .container {
-            padding: 30px 20px;
-        }
-        button {
-            width: 100%;
-        }
-    }
+}
 </style>
 </head>
 <body>
-    <div class="container">
-        <h1>FTTH Report pronto!</h1>
-        <p>Il PDF "<strong>{{ filename }}</strong>" è stato inviato via email.<br>
-        Puoi scaricarlo anche direttamente cliccando il pulsante qui sotto.</p>
 
-        <div class="button-group">
-            <a href="{{ file_url }}"><button class="download-btn">Scarica PDF</button></a>
-            <a href="{{ url_for('index') }}"><button class="back-btn">Torna all'inizio</button></a>
-        </div>
+<!-- Logo centrato -->
+<div class="logo-container">
+    <img src="https://www.simt.it/web/image/website/2/logo/SIMT%20-%20Impianti%20e%20Manutenzioni%20Elettroniche?unique=d1c64cc" alt="SIMT - Impianti e Manutenzioni Elettroniche">
+</div>
+
+<div class="container">
+    <h1>Verbale registrato correttamente</h1>
+    <p>Il verbale "<strong>{{ filename }}</strong>" è stato completato positivamente.<br>
+    Puoi scaricarlo anche direttamente cliccando il pulsante qui sotto.</p>
+
+    <div class="button-group">
+        <a href="{{ file_url }}"><button class="download-btn">Scarica PDF</button></a>
+        <a href="{{ url_for('index') }}"><button class="back-btn">Torna all'inizio</button></a>
     </div>
+</div>
+
 </body>
 </html>
